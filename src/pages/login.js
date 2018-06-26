@@ -6,6 +6,7 @@ import {
   Redirect,
   Link
 } from "react-router-dom";
+import ModalComponent from '../components/modal';
 
 export default class Login extends Component {
 
@@ -14,6 +15,11 @@ export default class Login extends Component {
     this.state = {
       onLoginProcess: false,
       isLogin: Auth.isLogin,
+      error: {
+        modal: false,
+        code: '',
+        message: '',
+      }
     };
   }
 
@@ -32,17 +38,48 @@ export default class Login extends Component {
       password: this.state.password,
     });
     this.setState({ onLoginProcess: false });
-    if (code && message) return console.log(code, message);
-    console.log({ user });
-    Auth.login({ email: 'asdasd', password: 'm1h8r513737' });
+    if (code && message) return this.setState({ error: { modal: true, code, message }});
+
+    Auth.login(user);
     this.setState({ isLogin: true });
+  }
+
+  errorModal = () => {
+    return (<ModalComponent
+      header={this.state.error.code ||  ''}
+      content={this.state.error.message ||  ''}
+      button="OK"
+      modalOpen={this.state.error.modal}
+      onClose={() => {
+        this.setState({ error: { modal: false } });
+        return this.state.error.modal;
+      }}
+    />);
+  }
+
+  loginForm = () => {
+    return (<Form onSubmit={() => this.login()}>
+      <Form.Field>
+        <label>Email</label>
+        <input onChange={this.emailOnChange} placeholder='Email' />
+      </Form.Field>
+      <Form.Field>
+        <label>Password</label>
+        <input type='password' onChange={this.passwordOnChange} placeholder='Passord' />
+      </Form.Field>
+      <Button primary>Login</Button>
+    </Form>);
+  }
+
+  loader = () => {
+    return (this.state.onLoginProcess) ? <Dimmer active><Loader /></Dimmer> : '';
   }
   render() {
     if (this.state.isLogin) return <Redirect to='/admin' />;
-    const loader = (this.state.onLoginProcess) ? <Dimmer active><Loader /></Dimmer> : '';
     return (
       <div style={{ 'paddingTop': 100 }}>
-        {loader}
+        {this.loader()}
+        {this.errorModal()}
         <Grid columns={3} centered padded>
           <Grid.Row>
             <Grid.Column>
@@ -50,17 +87,7 @@ export default class Login extends Component {
                 <Card.Content>
                   <Card.Header>Login</Card.Header>
                   <Card.Description>Login to access panel.</Card.Description>
-                  <Form onSubmit={() => this.login()}>
-                    <Form.Field>
-                      <label>Email</label>
-                      <input onChange={this.emailOnChange} placeholder='Email' />
-                    </Form.Field>
-                    <Form.Field>
-                      <label>Password</label>
-                      <input onChange={this.passwordOnChange} placeholder='Passord' />
-                    </Form.Field>
-                    <Button primary>Login</Button>
-                  </Form>
+                  {this.loginForm()}
                 </Card.Content>
               </Card>
             </Grid.Column>

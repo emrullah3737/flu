@@ -2,21 +2,24 @@ class Auth {
   constructor() {
     // TODO: session auto login
 
-    const profile = sessionStorage.getItem("profile");;
+    const profile = window.sessionStorage.getItem("profile");
     this.isLogin = profile ? true : false;
     if (profile) return this.profile = profile;
     return this.profile = null;
   }
 
-  login(body) {
-    const { email, password } = body;
-    if (email && password) {
+  login(user) {
+    console.log({ user });
+    if (user) {
       this.isLogin = true;
-      sessionStorage.setItem("profile", "ok");
-      return this.profile = body;
+      window.sessionStorage.setItem("profile", JSON.stringify(user));
+      return this.profile = user;
     }
-
     return this.profile = null;
+  }
+
+  getProfile() {
+    return JSON.parse(this.profile);
   }
 
   logout(cb) {

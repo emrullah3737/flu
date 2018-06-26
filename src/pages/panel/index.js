@@ -2,15 +2,14 @@ import React, { Component } from 'react';
 import { Menu, Segment } from 'semantic-ui-react'
 import Auth from '../../utils/auth';
 import {
-  BrowserRouter as Router,
   Route,
   Link,
-  Redirect,
-  withRouter
+  Redirect
 } from "react-router-dom";
 
 import Home from './home';
 import Post from './post';
+import Profile from './profile';
 
 export default class Panel extends Component {
 
@@ -58,6 +57,13 @@ export default class Panel extends Component {
               />
               <Menu.Menu position='right'>
                 <Menu.Item
+                  as={Link}
+                  name='profile'
+                  to={`${this.props.match.url}/profile`}
+                  active={activeItem === 'profile'}
+                  onClick={(...args) => { this.handleItemClick(...args) }}
+                />
+                <Menu.Item
                   name='logout'
                   active={activeItem === 'logout'}
                   onClick={(...args) => {
@@ -70,6 +76,7 @@ export default class Panel extends Component {
           </Segment>
         <Route exact path={`${this.props.match.url}`} component={Home} />
         <Route path={`${this.props.match.url}/post`} component={Post} />
+        <Route path={`${this.props.match.url}/profile`} component={Profile} />
         </div>
     )
   }
