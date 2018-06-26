@@ -13,7 +13,7 @@ class Auth {
     if (user) {
       this.isLogin = true;
       window.sessionStorage.setItem("profile", JSON.stringify(user));
-      return this.profile = user;
+      return this.profile = JSON.stringify(user);
     }
     return this.profile = null;
   }
