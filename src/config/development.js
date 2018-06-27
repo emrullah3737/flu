@@ -6,5 +6,8 @@ module.exports = {
     projectId: "react-ab3f4",
     storageBucket: "",
     messagingSenderId: "953254326874"
+  },
+  firebaseVerification: {
+    verification: true,
   }
 };

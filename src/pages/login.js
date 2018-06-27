@@ -1,13 +1,16 @@
 import React, { Component } from 'react';
 import Auth from '../utils/auth';
 import loginController from '../controller/login';
-import registerController from '../controller/register';
+import { register } from '../controller/register';
 import { Button, Grid, Form, Card, Loader, Dimmer, Modal, Header } from 'semantic-ui-react'
 import {
   Redirect,
   Link
 } from "react-router-dom";
 import ModalComponent from '../components/modal';
+import config from '../utils/config';
+
+const { firebaseVerification: { verification } } = config;
 
 export default class Login extends Component {
 
@@ -43,12 +46,14 @@ export default class Login extends Component {
 
   login = async () => {
     this.setState({ loader: true });
-    const { user, code, message } = await loginController({
+    const user = await loginController({
       email: this.state.email,
       password: this.state.password,
     });
+    const { code, message, emailVerified } = user;
     this.setState({ loader: false });
     if (code && message) return this.setState({ loginError: { modal: true, code, message }});
+    if (verification && !emailVerified) return this.setState({ loginError: { modal: true, code: 'Email Verification', message: 'Email not verified!' }});
 
     Auth.login(user);
     this.setState({ isLogin: true });
@@ -97,7 +102,7 @@ export default class Login extends Component {
   register = async () => {
     this.setState({ registerModal: false })
     this.setState({ loader: true });
-    const { user, code, message } = await registerController({
+    const {  user, code, message } = await register({
       email: this.state.reEmail,
       password: this.state.rePassword,
     });
