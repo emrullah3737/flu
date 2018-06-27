@@ -11,14 +11,18 @@ class Auth {
   login(user) {
     if (user) {
       this.isLogin = true;
-      window.sessionStorage.setItem("profile", JSON.stringify(user));
-      return this.profile = JSON.stringify(user);
+      return this.setProfile(user);
     }
     return this.profile = null;
   }
 
   getProfile() {
     return JSON.parse(this.profile);
+  }
+
+  setProfile(user) {
+    window.sessionStorage.setItem("profile", JSON.stringify(user));
+    return this.profile = JSON.stringify(user);
   }
 
   logout(cb) {
