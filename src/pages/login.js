@@ -1,7 +1,8 @@
 import React, { Component } from 'react';
 import Auth from '../utils/auth';
 import loginController from '../controller/login';
-import { Button, Grid, Form, Card, Loader, Dimmer } from 'semantic-ui-react'
+import registerController from '../controller/register';
+import { Button, Grid, Form, Card, Loader, Dimmer, Modal, Header } from 'semantic-ui-react'
 import {
   Redirect,
   Link
@@ -13,9 +14,10 @@ export default class Login extends Component {
   constructor(probs) {
     super(probs);
     this.state = {
-      onLoginProcess: false,
+      loader: false,
+      registerModal: false,
       isLogin: Auth.isLogin,
-      error: {
+      loginError: {
         modal: false,
         code: '',
         message: '',
@@ -31,14 +33,22 @@ export default class Login extends Component {
     this.setState({ password: e.target.value });
   }
 
+  reEmailOnChange = (e) => {
+    this.setState({ reEmail: e.target.value });
+  }
+
+  rePasswordOnChange = (e) => {
+    this.setState({ rePassword: e.target.value });
+  }
+
   login = async () => {
-    this.setState({ onLoginProcess: true });
+    this.setState({ loader: true });
     const { user, code, message } = await loginController({
       email: this.state.email,
       password: this.state.password,
     });
-    this.setState({ onLoginProcess: false });
-    if (code && message) return this.setState({ error: { modal: true, code, message }});
+    this.setState({ loader: false });
+    if (code && message) return this.setState({ loginError: { modal: true, code, message }});
 
     Auth.login(user);
     this.setState({ isLogin: true });
@@ -46,39 +56,88 @@ export default class Login extends Component {
 
   errorModal = () => {
     return (<ModalComponent
-      header={this.state.error.code ||  ''}
-      content={this.state.error.message ||  ''}
+      header={this.state.loginError.code ||  ''}
+      content={this.state.loginError.message ||  ''}
       button="OK"
-      modalOpen={this.state.error.modal}
+      modalOpen={this.state.loginError.modal}
       onClose={() => {
-        this.setState({ error: { modal: false } });
-        return this.state.error.modal;
+        this.setState({ loginError: { modal: false } });
+        return this.state.loginError.modal;
       }}
     />);
   }
 
   loginForm = () => {
-    return (<Form onSubmit={() => this.login()}>
-      <Form.Field>
-        <label>Email</label>
-        <input onChange={this.emailOnChange} placeholder='Email' />
-      </Form.Field>
-      <Form.Field>
-        <label>Password</label>
-        <input type='password' onChange={this.passwordOnChange} placeholder='Passord' />
-      </Form.Field>
-      <Button primary>Login</Button>
-    </Form>);
+    return (<div>
+      <Grid centered columns={1}>
+        <Grid.Column>
+          <Form onSubmit={this.login}>
+            <Form.Field>
+              <label>Email</label>
+              <input onChange={this.emailOnChange} placeholder='Email' />
+            </Form.Field>
+            <Form.Field>
+              <label>Password</label>
+              <input type='password' onChange={this.passwordOnChange} placeholder='Password' />
+            </Form.Field>
+            <Button primary>Login</Button>
+          </Form>
+        </Grid.Column>
+        <Grid.Column>
+          {this.registerFormModal()}
+        </Grid.Column>
+      </Grid>
+      </div>);
   }
 
   loader = () => {
-    return (this.state.onLoginProcess) ? <Dimmer active><Loader /></Dimmer> : '';
+    return (this.state.loader) ? <Dimmer active><Loader /></Dimmer> : '';
   }
+
+  register = async () => {
+    this.setState({ registerModal: false })
+    this.setState({ loader: true });
+    const { user, code, message } = await registerController({
+      email: this.state.reEmail,
+      password: this.state.rePassword,
+    });
+    this.setState({ loader: false });
+    if (code && message) return this.setState({ loginError: { modal: true, code, message } });
+  }
+
+  open = () => this.setState({ registerModal: true })
+  close = () => this.setState({ registerModal: false })
+
+  registerFormModal = () => {
+    return (<Modal open={this.state.registerModal} onOpen={this.open} onClose={this.close} size='tiny' trigger={<Button>Sign up</Button>}>
+      <Modal.Header>Sign Up</Modal.Header>
+      <Modal.Content>
+        <Modal.Description>
+          <Header>Sign up to login</Header>
+          <Form onSubmit={this.register}>
+            <Form.Field>
+              <label>Email</label>
+              <input onChange={this.reEmailOnChange} placeholder='Email' />
+            </Form.Field>
+            <Form.Field>
+              <label>Password</label>
+              <input type='password' onChange={this.rePasswordOnChange} placeholder='Password' />
+            </Form.Field>
+            <Grid centered columns={1}>
+              <Grid.Column>
+                <Button primary>Sign up</Button>
+              </Grid.Column>
+            </Grid>
+          </Form>
+        </Modal.Description>
+      </Modal.Content>
+    </Modal>);
+  }
+
   render() {
     if (this.state.isLogin) return <Redirect to='/admin' />;
     return (
       <div style={{ 'paddingTop': 100 }}>
-        {this.loader()}
         {this.errorModal()}
         <Grid columns={3} centered padded>
           <Grid.Row>
@@ -93,6 +152,7 @@ export default class Login extends Component {
             </Grid.Column>
           </Grid.Row>
         </Grid>
+        {this.loader()}
       </div>
     )
   }

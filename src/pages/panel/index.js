@@ -6,6 +6,7 @@ import {
   Link,
   Redirect
 } from "react-router-dom";
+import * as firebase from 'firebase';
 
 import Home from './home';
 import Post from './post';
@@ -28,8 +29,13 @@ export default class Panel extends Component {
   }
 
   logout() {
-    Auth.logout(() => {
+    Auth.logout(async () => {
       this.setState({ isLogin: false });
+      try {
+        await firebase.auth().signOut();
+      } catch (error) {
+        console.log({ error });
+      }
     });
   }
 

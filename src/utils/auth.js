@@ -9,7 +9,6 @@ class Auth {
   }
 
   login(user) {
-    console.log({ user });
     if (user) {
       this.isLogin = true;
       window.sessionStorage.setItem("profile", JSON.stringify(user));
