@@ -1,8 +1,10 @@
 import React, { Component } from 'react';
-import { Form, Card, Image, Icon, Grid } from 'semantic-ui-react';
+import { Form, Card, Image, Icon, Grid, Input, Popup } from 'semantic-ui-react';
 import Auth from '../../utils/auth';
 import * as moment from 'moment';
 import * as firebase from 'firebase';
+import { upload, downloadURL } from '../../services/firestorage';
+import ContentLoaderComponent from '../../components/contentLoader';
 
 export default class Profile extends Component {
   constructor(props) {
@@ -12,6 +14,7 @@ export default class Profile extends Component {
       displayName,
       email,
       photoURL,
+      avatarProcess: true,
       lastLoginAt,
       nameClick: false,
       emailClick: false,
@@ -21,10 +24,10 @@ export default class Profile extends Component {
   updateProfile = async({ displayName, photoURL }) => {
     const { currentUser } = firebase.auth();
     try {
-      return await currentUser.updateProfile({
-        displayName,
-        photoURL: '/assets/images/steve.jpg',
-      });
+      const obj = {};
+      if (displayName) Object.assign(obj, { displayName });
+      if (photoURL) Object.assign(obj, { photoURL });
+      return await currentUser.updateProfile(obj);
     } catch (error) {
       return error;
     }
@@ -33,18 +36,16 @@ export default class Profile extends Component {
   inputNameChange = async (e) => {
     const displayName = e.target.value;
     this.setState({ displayName });
-    const { photoURL } = this.state;
     try {
-      await this.updateProfile({ displayName, photoURL });
+      await this.updateProfile({ displayName });
       const { currentUser } = firebase.auth();
-      console.log(currentUser);
       Auth.setProfile(currentUser);
     } catch (error) {
       console.log(error);
     }
   }
 
-  inputName = () => {
+  displayName = () => {
     if (!this.state.nameClick) {
       return (<a onClick={() => this.setState({ nameClick: true })}>{this.state.displayName || 'Display Name'}</a>);
     }
@@ -54,16 +55,49 @@ export default class Profile extends Component {
   inputNameForm = () => {
     return (<Form onSubmit={() => this.setState({ nameClick: false })} size='mini'>
       <Form.Field>
-        <input onChange={this.inputNameChange} value={this.state.displayName} placeholder='Display Name' />
+        <Input onChange={this.inputNameChange} value={this.state.displayName} placeholder='Display Name' />
       </Form.Field>
     </Form>);
   }
 
+  uploadPhoto = async (e) => {
+    const file = e.target.files[0];
+    this.setState({ avatarProcess: true });
+    try {
+      const task = await upload({ file, folder: 'avatar'});
+      const photoURL = await downloadURL(task);
+      this.setState({ photoURL });
+      await this.updateProfile({ photoURL });
+      const { currentUser } = firebase.auth();
+      Auth.setProfile(currentUser);
+    } catch (error) {
+      console.log({ error });
+    }
+  }
+
+  avatar = (avatarId) => {
+    return (<div>
+      <label htmlFor={avatarId}>
+        <ContentLoaderComponent
+        active={this.state.avatarProcess}
+        message='Avatar is loading...'
+        content={<Image style={{ minHeight: '150px' }} onLoad={() => this.setState({ avatarProcess: false })} as='a' src={this.state.photoURL || '/assets/images/steve.jpg'} />}
+        />
+      </label>
+    </div>);
+  }
+
   profileCard = () => {
+    const avatarId = 'uploadPhoto';
     return (<Card>
-      <Image src={this.state.photoURL || '/assets/images/steve.jpg'} />
+        <Popup
+        trigger={this.avatar(avatarId)}
+          content='Change your avatar'
+          position='right center'
+        />
+      <Input style={{ visibility: 'hidden', marginTop: '-15%', }} id={avatarId} placeholder='sadasd' type='file' onChange={this.uploadPhoto} />
       <Card.Content>
-        <Card.Header>{this.inputName()}</Card.Header>
+        <Card.Header>{this.displayName()}</Card.Header>
         <Card.Meta>{this.state.email}</Card.Meta>
         <Card.Description>
         </Card.Description>

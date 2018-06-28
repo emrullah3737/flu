@@ -4,7 +4,7 @@ module.exports = {
     authDomain: "react-ab3f4.firebaseapp.com",
     databaseURL: "https://react-ab3f4.firebaseio.com",
     projectId: "react-ab3f4",
-    storageBucket: "",
+    storageBucket: "gs://react-ab3f4.appspot.com",
     messagingSenderId: "953254326874"
   },
   firebaseVerification: {
